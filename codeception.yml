@@ -1,0 +1,13 @@
+paths:
+    tests: codeception
+    output: codeception/_output
+    data: codeception/_data
+    support: codeception/_support
+    envs: codeception/_envs
+    log: codeception/_output
+actor_suffix: Tester
+extensions:
+    enabled:
+        - Codeception\Extension\RunFailed
+coverage:
+    enabled: true

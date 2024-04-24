@@ -1,0 +1,17 @@
+modules:
+    config:
+        WebDriver:
+            host: 'localhost'
+            port: 4445
+            url: 'https://localhost:4430'
+            capabilities:
+                acceptInsecureCerts: true
+                chromeOptions:
+                    args:
+                        - '--ignore-certificate-errors'
+                        - '--disable-popup-blocking'
+                    prefs:
+                        download.default_directory: '%GITHUB_WORKSPACE%/codeception/_support/_downloads'
+        MailCatcher:
+            url: 'localhost'
+            port: 1080
