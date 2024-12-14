@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ######################################################################
 #
@@ -23,6 +23,8 @@
 # http://xoops.ec-cube.net/modules/newbb/viewtopic.php?topic_id=4918&forum=14&post_id=23090#forumpost23090
 #
 #######################################################################
+
+set -e -u -o pipefail
 
 #######################################################################
 # Configuration
@@ -208,6 +210,7 @@ defined('SMTP_HOST') or define('SMTP_HOST', '${SMTP_HOST}');
 defined('SMTP_PORT') or define('SMTP_PORT', '${SMTP_PORT}');
 defined('SMTP_USER') or define('SMTP_USER', '${SMTP_USER}');
 defined('SMTP_PASSWORD') or define('SMTP_PASSWORD', '${SMTP_PASSWORD}');
+defined('TEST_MAILCATCHER_URL') or define('TEST_MAILCATCHER_URL', '${TEST_MAILCATCHER_URL-"http://127.0.0.1:1080"}');
 
 __EOF__
 
@@ -241,9 +244,9 @@ case "${DBTYPE}" in
 "appveyor" | "pgsql" )
    # PostgreSQL
     echo "dropdb..."
-    ${PSQL} -h ${DBSERVER} -U ${DBUSER} -p ${DBPORT} -c "DROP DATABASE ${DBNAME};"
+    ${PSQL} -h ${DBSERVER} -U ${DBUSER} -p ${DBPORT} -c "DROP DATABASE IF EXISTS ${DBNAME};" template1
     echo "createdb..."
-    ${PSQL} -h ${DBSERVER} -U ${DBUSER} -p ${DBPORT} -c "CREATE DATABASE ${DBNAME};"
+    ${PSQL} -h ${DBSERVER} -U ${DBUSER} -p ${DBPORT} -c "CREATE DATABASE ${DBNAME};" template1
     echo "create table..."
     ${PSQL} -h ${DBSERVER} -U ${DBUSER} -p ${DBPORT} -f ${SQL_DIR}/create_table_pgsql.sql ${DBNAME}
     echo "insert data..."
@@ -269,16 +272,16 @@ case "${DBTYPE}" in
     #${MYSQL} -u ${ROOTUSER} -h ${DBSERVER} -P ${DBPORT} ${PASSOPT} -e "GRANT ALL ON \`${DBNAME}\`.* TO '${DBUSER}'@'%' IDENTIFIED BY '${DBPASS}'"
     echo "create table..."
     echo "SET SESSION default_storage_engine = InnoDB; SET sql_mode = 'NO_ENGINE_SUBSTITUTION';" |
-        cat - ${SQL_DIR}/create_table_mysqli.sql |
+        cat - ${SQL_DIR}/create_table_mysqli.sql | sed -e 's/rank/`rank`/g' |
         ${MYSQL} -h ${DBSERVER} -u ${DBUSER} -h ${DBSERVER} -P ${DBPORT} ${PASSOPT} ${DBNAME}
     echo "insert data..."
     echo "SET CHARACTER SET 'utf8';" |
-        cat - ${SQL_DIR}/insert_data.sql |
+        cat - ${SQL_DIR}/insert_data.sql | sed -e 's/rank/`rank`/g' |
         ${MYSQL} -u ${DBUSER} -h ${DBSERVER} -P ${DBPORT} ${PASSOPT} ${DBNAME}
     echo "create sequence table..."
     create_sequence_tables
     echo "execute optional SQL..."
-    get_optional_sql | ${MYSQL} -u ${DBUSER} -h ${DBSERVER} -P ${DBPORT} ${PASSOPT} ${DBNAME}
+    get_optional_sql | sed -e 's/rank/`rank`/g' | ${MYSQL} -u ${DBUSER} -h ${DBSERVER} -P ${DBPORT} ${PASSOPT} ${DBNAME}
 ;;
 esac
 
